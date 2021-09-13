@@ -33,6 +33,6 @@ CREATE TABLE llx_consigne_consigneproduct(
 	est_emballage_consigne_vendu integer NOT NULL,
 	est_emballage_consigne_retour integer NOT NULL,
 	est_cache_bordereau_livraison integer DEFAULT 0 NOT NULL, 
-	colisage integer, 
+	colisage integer 
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;
