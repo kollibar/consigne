@@ -87,12 +87,12 @@ if ($nb === 0){ // aucun enregistrement => il faut en crée 1
 			dol_syslog("tabProductConsigne.php::echec de la création de l'objet consigneProduct", LOG_ERR);
 			exit;
 		}
-		
+
 		if( $id < $idproduct){
 			$sqlP = "SELECT * FROM ".MAIN_DB_PREFIX.$product->table_element." as t WHERE t.rowid = $id";
 			$resqlP = $db->query($sqlP);
 			$nbP = $db->num_rows($resqlP);
-			
+
 			if( $nbP === 0 ) { // aucun produit avec cet id
 				$consigneProduct->delete($user); // on supprime l'objet consigneProduct
 			}
@@ -127,9 +127,8 @@ $search_array_options=$extrafields->getOptionalsFromPost($extralabels,'','search
 // Initialize array of search criterias
 $search_all=trim(GETPOST("search_all",'alpha'));
 $search=array();
-foreach($object->fields as $key => $val)
-{
-    if (GETPOST('search_'.$key,'alpha')) $search[$key]=GETPOST('search_'.$key,'alpha');
+foreach($object->fields as $key => $val) {
+  if (GETPOST('search_'.$key,'alpha')) $search[$key]=GETPOST('search_'.$key,'alpha');
 }
 
 if (empty($action) && empty($id) && empty($ref)) $action='view';
@@ -162,8 +161,7 @@ $parameters=array();
 $reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
-if (empty($reshook))
-{
+if (empty($reshook)) {
 	$error=0;
 
 	$permissiontoadd = $user->rights->consigne->create;
@@ -191,7 +189,7 @@ if (empty($reshook))
  *
  * Put here all code to build page
  */
- 
+
 $shortlabel = dol_trunc($object->label,16);
 $helpurl ='';
 $title = $langs->trans('Product')." ". $shortlabel ." - ".$langs->trans('Consigne');
@@ -218,59 +216,56 @@ jQuery(document).ready(function() {
 </script>';
 
 // Update a product or service
-    if ($action == 'update' && $usercancreate)
-    {
-    	if (GETPOST('cancel','alpha')) {
-            $action = '';
-        } else {
-            if ($object->id > 0) {
+if ($action == 'update' && $usercancreate){
+	if (GETPOST('cancel','alpha')) {
+  	$action = '';
+  } else {
+  if ($object->id > 0) {
 		$error=0;
-		
-//		$object->oldcopy= clone $object;
 
-                $object->entity                    = $entity;
-                $object->description            = dol_htmlcleanlastbr(GETPOST('desc','none'));
-                $object->status            = GETPOST('status');
-                $object->fk_product             = $idproduct;
-                $object->fk_product_emballage_vendu         = GETPOST('fk_product_emballage_vendu');
-                $object->fk_product_emballage_retour          = GETPOST('fk_product_emballage_retour');
+		//		$object->oldcopy= clone $object;
+
+    $object->entity                    = $entity;
+    $object->description            = dol_htmlcleanlastbr(GETPOST('desc','none'));
+    $object->status            = GETPOST('status');
+    $object->fk_product             = $idproduct;
+    $object->fk_product_emballage_vendu         = GETPOST('fk_product_emballage_vendu');
+    $object->fk_product_emballage_retour          = GETPOST('fk_product_emballage_retour');
 		$object->fk_product_emballage_consigne          = GETPOST('fk_product_emballage_consigne');
 
-                $object->est_emballage_consigne_vendu                 = GETPOST('est_emballage_consigne_vendu');
-                $object->est_emballage_consigne                 = GETPOST('est_emballage_consigne');
-                $object->suivi_emballage           = GETPOST('suivi_emballage');
-		
+    $object->est_emballage_consigne_vendu                 = GETPOST('est_emballage_consigne_vendu');
+    $object->est_emballage_consigne                 = GETPOST('est_emballage_consigne');
+    $object->suivi_emballage           = GETPOST('suivi_emballage');
+
 		$object->est_cache_bordereau_livraison           = GETPOST('est_cache_bordereau_livraison');
 		$object->colisage           = GETPOST('colisage');
-		
+
 		if( $object->fk_product_emballage_vendu == "-1" ) $object->fk_product_emballage_vendu=null;
 		if( $object->fk_product_emballage_retour == "-1" ) $object->fk_product_emballage_retour=null;
 		if( $object->fk_product_emballage_consigne == "-1" ) $object->fk_product_emballage_consigne=null;
-		if( $object->colisage== "-1" ) $object->colisage=null;
-		
+		if( $object->colisage== "-1" || $object->colisage==null) $object->colisage="0";
+
 		if( $object->est_emballage_consigne != "1") $object->est_emballage_consigne ="0";
 		if( $object->est_emballage_consigne_vendu != "1") $object->est_emballage_consigne_vendu ="0";
 		if( $object->suivi_emballage != "1") $object->suivi_emballage ="0";
-		
+
 		if( $object->est_cache_bordereau_livraison != "1") $object->est_cache_bordereau_livraison ="0";
 
-                if (! $error && $object->check())
-                {
-			//var_dump($object);
-                    if ($object->update($user) > 0) {
-                        $action = 'view';
-                    } else {
-			if (count($object->errors)) setEventMessages($object->error, $object->errors, 'errors');
-                    	else setEventMessages($langs->trans($object->error), null, 'errors');
-                        $action = 'edit';
-                    }
-                }
-                else {
-			if (count($object->errors)) setEventMessages($object->error, $object->errors, 'errors');
-                	else setEventMessages($langs->trans("ErrorProductBadRefOrLabel"), null, 'errors');
-			$action = 'edit';
-                }
-            }
+	    if (! $error && $object->check()) {
+				//var_dump($object);
+	      if ($object->update($user) > 0) {
+	          $action = 'view';
+	      } else {
+					if (count($object->errors)) setEventMessages($object->error, $object->errors, 'errors');
+	        else setEventMessages($langs->trans($object->error), null, 'errors');
+	      	$action = 'edit';
+	      }
+	    } else {
+				if (count($object->errors)) setEventMessages($object->error, $object->errors, 'errors');
+	      else setEventMessages($langs->trans("ErrorProductBadRefOrLabel"), null, 'errors');
+				$action = 'edit';
+	    }
+  	}
 	}
 }
 
@@ -349,7 +344,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	//$head = consigneproductPrepareHead($object);
 	//dol_fiche_head($head, 'card', $langs->trans("ConsigneProduct"), -1, 'consigneproduct@consigne');
-	
+
 	$head = product_prepare_head($product, $user);
 	dol_fiche_head($head, 'tabConsigneProduct');
 
@@ -401,7 +396,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	*/
 	$morehtmlref.='</div>';
-	
+
 	$linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php?restore_lastsearch_values=1&type='.$object->type.'">'.$langs->trans("BackToList").'</a>';
             $object->next_prev_filter=" fk_product_type = ".$object->type;
 
@@ -445,7 +440,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
     	if (empty($reshook))
     	{
-    	    
+
 		// bouton MODIFIER
     		if ($user->rights->produit->creer)
     		{

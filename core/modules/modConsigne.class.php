@@ -185,7 +185,7 @@ class modConsigne extends DolibarrModules
         // Boxes/Widgets
 		// Add here list of php file(s) stored in consigne/core/boxes that contains class to show a widget.
         $this->boxes = array(
-        	0=>array('file'=>'consignewidget1.php@consigne','note'=>'Widget provided by Consigne','enabledbydefaulton'=>'Home'),
+        	//0=>array('file'=>'consignewidget1.php@consigne','note'=>'Widget provided by Consigne','enabledbydefaulton'=>'Home'),
         	//1=>array('file'=>'consignewidget2.php@consigne','note'=>'Widget provided by Consigne'),
         	//2=>array('file'=>'consignewidget3.php@consigne','note'=>'Widget provided by Consigne')
         );
@@ -301,7 +301,7 @@ class modConsigne extends DolibarrModules
 								'perms'=>'1',			                // Use 'perms'=>'$user->rights->consigne->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
-               		
+
 		$this->menu[$r++]=array(
                 				'fk_menu'=>'fk_mainmenu=products,fk_leftmenu=consigne',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 								'type'=>'left',			                // This is a Left menu entry
@@ -346,7 +346,7 @@ class modConsigne extends DolibarrModules
 								'perms'=>'1',			                // Use 'perms'=>'$user->rights->consigne->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
-	
+
 
 		$this->menu[$r++]=array(
                 				'fk_menu'=>'fk_mainmenu=consigne',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
@@ -362,7 +362,7 @@ class modConsigne extends DolibarrModules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
 
-               		
+
 		/* */
 
 		$this->menu[$r++]=array(
@@ -391,7 +391,7 @@ class modConsigne extends DolibarrModules
 								'perms'=>'1',			                // Use 'perms'=>'$user->rights->consigne->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
-               		
+
 		/* */
 
 		$this->menu[$r++]=array(
@@ -420,7 +420,7 @@ class modConsigne extends DolibarrModules
 								'perms'=>'1',			                // Use 'perms'=>'$user->rights->consigne->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
-               		
+
 		/* */
 
 		$this->menu[$r++]=array(
@@ -449,7 +449,7 @@ class modConsigne extends DolibarrModules
 								'perms'=>'1',			                // Use 'perms'=>'$user->rights->consigne->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
-               		
+
 		/* */
 
 		$this->menu[$r++]=array(
@@ -478,7 +478,7 @@ class modConsigne extends DolibarrModules
 								'perms'=>'1',			                // Use 'perms'=>'$user->rights->consigne->level1->level2' if you want your menu with a permission rules
 								'target'=>'',
 								'user'=>2);				                // 0=Menu for internal users, 1=external users, 2=both
-               		
+
 		/* END MODULEBUILDER LEFTMENU MYOBJECT */
 
 
@@ -527,13 +527,13 @@ class modConsigne extends DolibarrModules
 		//$result4=$extrafields->addExtraField('myattr4', "New Attr 4 label", 'select',  1,  3, 'thirdparty',   0, 1, '', array('options'=>array('code1'=>'Val1','code2'=>'Val2','code3'=>'Val3')), 1 '', 0, 0, '', '', 'consigne@consigne', '$conf->consigne->enabled');
 		//$result5=$extrafields->addExtraField('myattr5', "New Attr 5 label", 'text',    1, 10, 'user',         0, 0, '', '', 1, '', 0, 0, '', '', 'consigne@consigne', '$conf->consigne->enabled');
 
-		
+
 		include_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 		dol_include_once('/consigne/class/consigneproduct.class.php');
-		
+
 		$product=new Product($this->db);
 		$consigneProduct = new ConsigneProduct($this->db);
-		
+
 		// requête SQL sur toute la table produit
 		$sql = 'SELECT ';
 		//foreach($product->fields as $key => $val){$sql.='t.'.$key.', ';	}
@@ -554,7 +554,7 @@ class modConsigne extends DolibarrModules
 			dol_print_error($this->db);
 			exit;
 		}
-		
+
 		// requête SQL sur toute la table consigneProduct
 		$sqlCP = 'SELECT ';
 		foreach($consigneProduct->fields as $key => $val){$sqlCP.='t.'.$key.', ';}
@@ -574,9 +574,9 @@ class modConsigne extends DolibarrModules
 			dol_print_error($this->db);
 			exit;
 		}
-		
+
 		$lastID=0;
-	
+
 		// parcours de tous les objets CONSIGNEPRODUCT afin de supprimer ceux dont l'objet n'existerais plus
 		if( $nbtotalofCP != 0) {
 			$i=0;
@@ -586,38 +586,38 @@ class modConsigne extends DolibarrModules
 				if (empty($obj)) break;		// Should not happen
 				$id=$obj->rowid;
 				$lastID=$id;
-				
+
 				// recherche si il existe bien un obet PRODUCT avec le même id
 				$sqlID='SELECT ';
 				$sqlID.='t.rowid';
 				//foreach($product->fields as $key => $val){$sqlID.='t.'.$key.', ';}
 				//$sqlID=preg_replace('/, $/','', $sqlID);
 				$sqlID.=' FROM '.MAIN_DB_PREFIX.$product->table_element." as t WHERE t.rowid = $id";
-				
+
 				$resqlID = $this->db->query($sqlID);
 				$nb=$this->db->num_rows($resqlID);
 				if( $nb == 0) { // aucun objet PRODUCT avec l'id de l'objet CONSIGNEPRODUCT ==> Suppression de l'objet CONSIGNEPRODUCT
 					$consigneProduct->id = $obj->rowid; // affectation de l'objet consigneProduct
 					foreach($consigneProduct->fields as $key => $val) {if (isset($obj->$key)) $consigneProduct->$key = $obj->$key;}
-					
+
 					$consigneProduct->delete($user); // puis suppression
 				}
 			}
 		}
-		
-		
+
+
 		// parcours de tous les objets product
 		$i=0;
 		while ($i < $nbtotalofproduct){
 			$i++;
 			$obj = $this->db->fetch_object($resql);
 			if (empty($obj)) break;		// Should not happen
-			
+
 			if( $obj->rowid > $lastID ){ // si l'id objet est supérieur à la dernière id consigneproduct (pas besoin de regarder avant, elles y sont forcément !)
 				// Store properties in $object
 				$product->id = $obj->rowid;
 				//foreach($product->fields as $key => $val) {if (isset($obj->$key)) $product->$key = $obj->$key;}
-				
+
 				$sqlCP = 'SELECT ';
 				$sqlCP.='* ';
 				//foreach($consigneProduct->fields as $key => $val){$sql.='t.'.$key.', ';}
@@ -626,7 +626,7 @@ class modConsigne extends DolibarrModules
 				$sqlCP.=" WHERE t.rowid = ".$product->id;
 				$resqlCP = $this->db->query($sqlCP);
 				$nbtotalofrecords = $this->db->num_rows($resqlCP);
-				
+
 				if ($nbtotalofrecords == 0){ // aucun enregistrement => il faut en crée 1
 					$id=0;
 					while( $id < $obj->rowid){
@@ -637,7 +637,7 @@ class modConsigne extends DolibarrModules
 							dol_syslog("Activation module consigne: Erreur de création d'un consigneProduct !", LOG_ERR);
 							exit;
 						}
-						
+
 						if( $id < $obj->rowid){
 							$consigneProduct->delete($user);
 						}

@@ -101,7 +101,7 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 
 	    // Put here code you want to execute when a Dolibarr business events occurs.
 		// Data and type of action are stored into $object and $action
-		
+
 	include_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 	include_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 	include_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
@@ -112,15 +112,15 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 	dol_include_once('/consigne/class/facturationconsigne.class.php');
 	dol_include_once('/consigne/class/mouvementconsigne.class.php');
 	dol_include_once('/consigne/class/retourconsigne.class.php');
-	
+
 	$db=$object->db;
-	
+
 	// chargement des champs extra
 	$extrafields = new ExtraFields($db);
-	
-	
+
+
 	dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
-	
+
         switch ($action) {
 
             // Users
@@ -161,46 +161,46 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 			break;
 		        // Products
 		    case 'PRODUCT_CREATE':
-			$product=new Product($db);
-			
-			$consigneProduct = new ConsigneProduct($db);
-			$object->id;
-			$id=0;
-			while( $id < $object->id){
-				$consigneProduct->init();
-				$consigneProduct->fk_product=$object->id;
-				$id=$consigneProduct->create($user);
-				if( $id < 0) {
-					/// A FAIRE => ajouter log erreur
-					return -1;
-				}
-				
-				dol_syslog(__FILE__.": Suppresion des consigneProduct non liées à un objet",LOG_DEBUG);
-				if( $id < $object->id){
-					$sqlP = "SELECT * FROM ".MAIN_DB_PREFIX.$product->table_element." as t WHERE t.rowid = $id";
-					$resqlP = $db->query($sqlP);
-					$nbP = $db->num_rows($resqlP);
-					
-					if( $nbP === 0 ) { // aucun produit avec cet id
-						dol_syslog(__FILE__.": Suppression consigneProduct ". $consignedProduct->rowid,LOG_DEBUG);
-						$consigneProduct->delete($user); // on supprime l'objet consigneProduct
+					$product=new Product($db);
+
+					$consigneProduct = new ConsigneProduct($db);
+					$object->id;
+					$id=0;
+					while( $id < $object->id){
+						$consigneProduct->init();
+						$consigneProduct->fk_product=$object->id;
+						$id=$consigneProduct->create($user);
+						if( $id < 0) {
+							/// A FAIRE => ajouter log erreur
+							return -1;
+						}
+
+						dol_syslog(__FILE__.": Suppresion des consigneProduct non liées à un objet",LOG_DEBUG);
+						if( $id < $object->id){
+							$sqlP = "SELECT * FROM ".MAIN_DB_PREFIX.$product->table_element." as t WHERE t.rowid = $id";
+							$resqlP = $db->query($sqlP);
+							$nbP = $db->num_rows($resqlP);
+
+							if( $nbP === 0 ) { // aucun produit avec cet id
+								dol_syslog(__FILE__.": Suppression consigneProduct ". $consignedProduct->rowid,LOG_DEBUG);
+								$consigneProduct->delete($user); // on supprime l'objet consigneProduct
+							}
+						}
 					}
-				}
-			}
-			return 1;
-			
-		    case 'PRODUCT_MODIFY':
-			break;
-		    case 'PRODUCT_DELETE':
-			// ajouter suppression consigne
-			$consigneProduct = new ConsigneProduct($db);
-			
-			dol_syslog(__FILE__.": Suppression consigneProduct ". $object->id." (car suppression de l'objet lié)",LOG_DEBUG);
-			
-			$consigneProduct->fetch($object->id);		
-			$consigneProduct->delete($user); // puis suppression
-			return 1;
-			
+					return 1;
+
+				    case 'PRODUCT_MODIFY':
+					break;
+				    case 'PRODUCT_DELETE':
+					// ajouter suppression consigne
+					$consigneProduct = new ConsigneProduct($db);
+
+					dol_syslog(__FILE__.": Suppression consigneProduct ". $object->id." (car suppression de l'objet lié)",LOG_DEBUG);
+
+					$consigneProduct->fetch($object->id);
+					$consigneProduct->delete($user); // puis suppression
+					return 1;
+
 		    case 'PRODUCT_PRICE_MODIFY':
 		    case 'PRODUCT_SET_MULTILANGS':
 		    case 'PRODUCT_DEL_MULTILANGS':
@@ -227,120 +227,122 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 		    case 'ORDER_SETDRAFT':
 			break;
 		    case 'LINEORDER_INSERT':
-			$id_produit=$object->fk_product;
-			
-			//$product=new Product($db);
-			$consigneProduct=new ConsigneProduct($db);
-			$consigneProduct->fetch($id_produit);
-			
-			if(  $consigneProduct->fk_product_emballage_consigne != null ){ // le produit a un emballage consigné!
-				$id_commande=$object->fk_commande;
-				
-				$commande=new Commande($db);
-				$result=$commande->fetch($object->fk_commande);
-				
-				if( $result < 0){ //erreur
-					dol_syslog(__FILE__."::fetch(".$commande->element.$id_commande."):: erreur :".$result, LOG_ERR);
-					return -1;
-				} else if( $result == 0){ // erreur objet $id_commande non trouvé. Ne devrais pas arriver
-					dol_syslog(__FILE__."::fetch(".$commande->element.$id_commande."):: non trouvé", LOG_ERR);
-					return -1;
-				}
-				
-				$nbLigne=count($commande->lines);
-				
-				$commande->thirdparty=new Societe($db);
-				$result=$commande->thirdparty->fetch($commande->socid);
-				
-				$prod=new Product($db);
-				$result=$prod->fetch($consigneProduct->fk_product_emballage_consigne);
-				
-				$commande->add_product($consigneProduct->fk_product_emballage_consigne,$object->qty); // on ajoute la consigne !
-				if( count($commande->lines) == $nbLigne+1){ // insertion OK
-				
-					$ligne=$commande->lines[$nbLigne];
-					
-					$ligne->rang=$object->rang+1;
-				
-					$ligne->price=$ligne->subprice;
-				
-					$ligne->total_ht = price2num($ligne->subprice * $object->qty,'MT');
-					$ligne->total_tva = price2num($ligne->total_ht* $ligne->tva_tx/100,'MT');
-					$ligne->total_ttc = price2num($ligne->total_ht + $ligne->total_tva,'MT');
-				
-					$ligne->fk_commande=$object->fk_commande;
-					$ligne->fk_multicurrency=$object->fk_multicurrency;
-					$ligne->multicurrency_code=$object->multicurrency_code;
-					
-					$tx=$object->multicurrency_total_ttc/$object->total_ttc;
-					
-					$ligne->multicurrency_total_ttc=price2num($ligne->total_ttc * $tx,'MT');
-					$ligne->multicurrency_total_ht=price2num($ligne->total_ht * $tx,'MT');
-					$ligne->multicurrency_total_tva=price2num($ligne->total_tva * $tx,'MT');
-					$ligne->multicurrency_subprice=price2num($ligne->subprice * $tx,'MU');
-					
-					$ligne->label=$prod->label;
-					
-					$prodLie=new Product($db);
-					$result=$prodLie->fetch($object->fk_product);
-					
-					$ligne->desc=$prod->description.($prod->description?"\r":"")."\t(pour ".$prodLie->label.")";
-					
-					/*$tva_tx = get_default_tva($mysoc, $object->thirdparty, $prod->id);
-					$tva_npr = get_default_npr($mysoc, $object->thirdparty, $prod->id);
-					if (empty($tva_tx)) $tva_npr=0;*/
-					
-					
-					$result=$ligne->insert($user,1); // insertion de la nouvelle ligne dans la base, SANS TRIGGER !!
-					
-					// $result = $object->addline($desc, $pu_ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, $idprod, $remise_percent, $info_bits, 0, $price_base_type, $pu_ttc, $date_start, $date_end, $type, - 1, 0, GETPOST('fk_parent_line'), $fournprice, $buyingprice, $label, $array_options, $fk_unit, '', 0, $pu_ht_devise);
-					
-					if( $result < 0 ){ //
-						dol_syslog(__FILE__."::insertion OrderLine consigne:: erreur :".$result, LOG_ERR);
-						return -1;
+					$id_produit=$object->fk_product;
+
+					//$product=new Product($db);
+					$consigneProduct=new ConsigneProduct($db);
+					$consigneProduct->fetch($id_produit);
+
+					if(  $consigneProduct->fk_product_emballage_consigne != null ){ // le produit a un emballage consigné!
+						$id_commande=$object->fk_commande;
+
+						$commande=new Commande($db);
+						$result=$commande->fetch($object->fk_commande);
+
+						if( $result < 0){ //erreur
+							dol_syslog(__FILE__."::fetch(".$commande->element.$id_commande."):: erreur :".$result, LOG_ERR);
+							return -1;
+						} else if( $result == 0){ // erreur objet $id_commande non trouvé. Ne devrais pas arriver
+							dol_syslog(__FILE__."::fetch(".$commande->element.$id_commande."):: non trouvé", LOG_ERR);
+							return -1;
+						}
+
+						$nbLigne=count($commande->lines);
+
+						$commande->thirdparty=new Societe($db);
+						$result=$commande->thirdparty->fetch($commande->socid);
+
+						$prod=new Product($db);
+						$result=$prod->fetch($consigneProduct->fk_product_emballage_consigne);
+
+						$commande->add_product($consigneProduct->fk_product_emballage_consigne,$object->qty); // on ajoute la consigne !
+						if( count($commande->lines) == $nbLigne+1){ // insertion OK
+
+							$ligne=$commande->lines[$nbLigne];
+
+							$ligne->rang=$object->rang+1;
+
+							$ligne->price=$ligne->subprice;
+
+							$ligne->total_ht = price2num($ligne->subprice * $object->qty,'MT');
+							$ligne->total_tva = price2num($ligne->total_ht* $ligne->tva_tx/100,'MT');
+							$ligne->total_ttc = price2num($ligne->total_ht + $ligne->total_tva,'MT');
+
+							$ligne->fk_commande=$object->fk_commande;
+							$ligne->fk_multicurrency=$object->fk_multicurrency;
+							$ligne->multicurrency_code=$object->multicurrency_code;
+
+							$tx=$object->multicurrency_total_ttc/$object->total_ttc;
+
+							$ligne->multicurrency_total_ttc=price2num($ligne->total_ttc * $tx,'MT');
+							$ligne->multicurrency_total_ht=price2num($ligne->total_ht * $tx,'MT');
+							$ligne->multicurrency_total_tva=price2num($ligne->total_tva * $tx,'MT');
+							$ligne->multicurrency_subprice=price2num($ligne->subprice * $tx,'MU');
+
+							$ligne->label=$prod->label;
+
+							$prodLie=new Product($db);
+							$result=$prodLie->fetch($object->fk_product);
+
+							$ligne->desc=$prod->description.($prod->description?"\r":"")."\t(pour ".$prodLie->label.")";
+
+							/*$tva_tx = get_default_tva($mysoc, $object->thirdparty, $prod->id);
+							$tva_npr = get_default_npr($mysoc, $object->thirdparty, $prod->id);
+							if (empty($tva_tx)) $tva_npr=0;*/
+
+
+							$result=$ligne->insert($user,1); // insertion de la nouvelle ligne dans la base, SANS TRIGGER !!
+
+							// $result = $object->addline($desc, $pu_ht, $qty, $tva_tx, $localtax1_tx, $localtax2_tx, $idprod, $remise_percent, $info_bits, 0, $price_base_type, $pu_ttc, $date_start, $date_end, $type, - 1, 0, GETPOST('fk_parent_line'), $fournprice, $buyingprice, $label, $array_options, $fk_unit, '', 0, $pu_ht_devise);
+
+							if( $result < 0 ){ //
+								dol_syslog(__FILE__."::insertion OrderLine consigne:: erreur :".$result, LOG_ERR);
+								return -1;
+							}
+
+							// récupération de l'objet produit
+							$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
+
+							// et update de l'objet consigne
+							$commande->lines[$nbLigne]->fetch_optionals($commande->lines[$nbLigne]->rowid,$extralabelsCmdeLigne);
+
+							// ajout du lien
+							$object->array_options['fk_ligneLiee']=$commande->lines[$nbLigne]->rowid;
+							$object->insertExtraFields();
+
+							$commande->lines[$nbLigne]->array_options['fk_ligneLiee']=$object->rowid;
+							$commande->lines[$nbLigne]->insertExtraFields();
+
+							return 1;
+						}
+
+
 					}
-					
-					// récupération de l'objet produit
-					$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
-					
-					// et update de l'objet consigne
-					$commande->lines[$nbLigne]->fetch_optionals($commande->lines[$nbLigne]->rowid,$extralabelsCmdeLigne);  
-					
-					// ajout du lien
-					$object->array_options['fk_ligneLiee']=$commande->lines[$nbLigne]->rowid;
-					$object->insertExtraFields();
-					
-					$commande->lines[$nbLigne]->array_options['fk_ligneLiee']=$object->rowid;
-					$commande->lines[$nbLigne]->insertExtraFields();
-					
-					return 1;
-				}
-				
-				
-			}
-			else if ($consigneProduct->est_emballage_consigne == true ){ // le produit est un emballage consigné!
-				// A FAIRE, pour l'instant on ne fait rien... on verra plus tard!
-				// il faudrait bloquer l'ajout de consigne "autonome"...., non ?
-			
-			} else if( $consigneProduct->est_emballage_consigne_vendu == true){
-				// A FAIRE, pour l'instant on ne fait rien... on verra plus tard!
-				// A voir !
-			}
-		    
-			return 0;
+					else if ($consigneProduct->est_emballage_consigne == true ){ // le produit est un emballage consigné!
+						// A FAIRE, pour l'instant on ne fait rien... on verra plus tard!
+						// il faudrait bloquer l'ajout de consigne "autonome"...., non ?
+
+					} else if( $consigneProduct->est_emballage_consigne_vendu == true){
+						// A FAIRE, pour l'instant on ne fait rien... on verra plus tard!
+						// A voir !
+					}
+
+					return 0;
+				case 'LINEORDER_MODIFY':
 		    case 'LINEORDER_UPDATE':
 			$error=0;
 			$extralabelsCmdeLigne=$extrafields->fetch_name_optionals_label($object->table_element);
-			
+
 			$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
-			
+
 			$cmde=new Commande($db);
 			$extralabelsCmde=$extrafields->fetch_name_optionals_label($cmde->table_element);
-			
+
 			$sql="SELECT * FROM ". MAIN_DB_PREFIX.$object->table_element."_extrafields as t WHERE fk_ligneLiee = ".$object->rowid;
+			dol_syslog(__FILE__."::".$this->name, LOG_DEBUG);
 			$resql = $db->query($sql);
 			$nb = $db->num_rows($resql);
-			
+
 			if ($nb != 0){ // il existe un (des) liens
 				$cmdeLigneLiee=new OrderLine($db);
 				$i=0;
@@ -348,62 +350,62 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 				while( $i < $nb){
 					$i++;
 					$obj=$db->fetch_object($resql);
-				
+
 					if (empty($obj)) {		// Should not happen
 						return -1;
 					}
-					
-					
+
+
 					$cmdeLigneLiee->fetch($obj->fk_object);
 					$cmdeLigneLiee->fetch_optionals($obj->fk_object,$extralabelsCmdeLigne);
-					
+
 					// actualisation du lien
 					$object->array_options['fk_ligneLiee']=$cmdeLigneLiee->rowid;
 					$object->insertExtraFields();
-					
+
 					if( $object->qty == $cmdeLigneLiee->qty) continue; // pas de changement de quantité=>rien à faire
-					
+
 					$multi=$object->qty / $cmdeLigneLiee->qty;
 					$cmdeLigneLiee->qty=$object->qty;
-					
-					
+
+
 					$cmdeLigneLiee->total_ht = price2num($cmdeLigneLiee->subprice * $object->qty,'MT');
 					$cmdeLigneLiee->total_tva = price2num($cmdeLigneLiee->total_ht * $cmdeLigneLiee->tva_tx / 100,'MT');
 					$cmdeLigneLiee->total_ttc = price2num($cmdeLigneLiee->total_ht + $cmdeLigneLiee->total_tva,'MT');
-					
+
 					$cmdeLigneLiee->multicurrency_total_ttc=price2num($cmdeLigneLiee->multicurrency_total_ttc * $multi,'MT');
 					$cmdeLigneLiee->multicurrency_total_ht=price2num($cmdeLigneLiee->multicurrency_total_ht * $multi,'MT');
 					$cmdeLigneLiee->multicurrency_total_tva=price2num($cmdeLigneLiee->multicurrency_total_tva * $multi,'MT');
 					$cmdeLigneLiee->multicurrency_subprice=price2num($cmdeLigneLiee->multicurrency_subprice * $multi,'MU');
-					
+
 					$result = $cmdeLigneLiee->update($user,1); // actualisation de la ligne consigne, SANS TRIGGER !!!
-					
+
 					If( $result >0 ) $nbAction++;
 					else $error++;
-					
-					
+
+
 					$cmde->fetch($cmdeLigneLiee->fk_commande);
 					$cmde->fetch_optionals($cmdeLigneLiee->fk_commande,$extralabelsCmde);
-					
+
 				}
 				if( $error !=0 ) return -$error;
 				else return $nbAction;
 			}
-			
+
 			return 0;
 		    case 'LINEORDER_DELETE':
 			$error=0;
 			$extralabelsCmdeLigne=$extrafields->fetch_name_optionals_label($object->table_element);
-			
+
 			$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
-			
+
 			$cmde=new Commande($db);
 			$extralabelsCmde=$extrafields->fetch_name_optionals_label($cmde->table_element);
-			
+
 			$sql="SELECT * FROM ". MAIN_DB_PREFIX.$object->table_element."_extrafields as t WHERE fk_ligneLiee = ".$object->rowid;
 			$resql = $db->query($sql);
 			$nb = $db->num_rows($resql);
-			
+
 			if ($nb != 0){ // il existe un (des) liens
 				$cmdeLigneLiee=new OrderLine($db);
 				$i=0;
@@ -411,19 +413,19 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 				while( $i < $nb){
 					$i++;
 					$obj=$db->fetch_object($resql);
-				
+
 					if (empty($obj)) {		// Should not happen
 						return -1;
 					}
-					
+
 					$cmdeLigneLiee->fetch($obj->fk_object);
 					$cmdeLigneLiee->fetch_optionals($obj->fk_object,$extralabelsCmdeLigne);
-					
+
 					$result=$cmdeLigneLiee->delete($user,1);
-					
+
 					if( $result>0) $nbAction++;
 					else if( $result < 0 ) $error++;
-					
+
 				}
 				if( $error !=0) return $error;
 				else return $nbAction;
