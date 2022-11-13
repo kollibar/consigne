@@ -127,8 +127,8 @@ class ActionsConsigne
       $product = new Product($db);
       $consigneProduct = new ConsigneProduct($db);
 
-      if( $line->fk_product ){
-        $consigneProduct->fetch($line->fk_product);
+      if( !empty($parameters['line']->fk_product) ){
+        $consigneProduct->fetch($parameters['line']->fk_product);
         // $product->fetch($line->fk_product);
       } else {
 
@@ -248,18 +248,12 @@ class ActionsConsigne
       if( ! array_key_exists( 'editColspan', $parameters)){ // cas 1 création de l'éxpédition
 
         // masquage des cache sur les BL
-        /*
-        if( $consigneProduct->est_cache_bordereau_livraison == 1){
-          print('<script>jQuery(document).ready(function() {
-            $(\'a[name='.$parameters['line']->id']\').closest(\'td\').closest(\'tr\').attr(\'style\',\'display:none;\');
-          }
-          ');
+        if( $consigneProduct->est_cache_bordereau_livraison ){
+          print '<script>jQuery(document).ready(function() {
+            $(\'a[name='.$parameters['line']->id.']\').closest(\'td\').closest(\'tr\').attr(\'style\',\'display:none;\');
+          });
+          </script>';
         }
-        */
-
-
-
-
 
       } else { // cas 2: affichage/édition de l'expédition
 
