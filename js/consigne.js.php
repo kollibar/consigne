@@ -137,25 +137,25 @@ function cs_getQty(index, subindex){
     return parseInt($('#qtyl'+index+'_'+subindex).val());
   }
 }
-function getName(index, subindex){
+function cs_getName(index, subindex){
   if( subindex == 0 && $('#qtyl'+index).length == 1){
     return '#qtyl'+index;
   } else if($('#qtyl'+index+'_'+subindex).length == 1){
     return '#qtyl'+index+'_'+subindex;
   }
 }
-function getNbInput(index){
+function cs_getNbInput(index){
   var l=cs_getListeInputName_Index(index);
   return l.length;
 }
-function verifLiens(i,i_lie){
+function cs_verifLiens(i,i_lie){
   var qty=cs_getQty_Index(i);
   var qty_lie=cs_getQty_Index(i_lie);
 
   console.log('qty:' + qty + ' qty_lie:' + qty_lie);
 
 
-  var nb_lie=getNbInput(i_lie);
+  var nb_lie=cs_getNbInput(i_lie);
 
   var j=0;
   while( qty != qty_lie && j < nb_lie){

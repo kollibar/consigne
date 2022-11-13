@@ -139,10 +139,41 @@ class ActionsConsigne
 
         if( $parameters['i'] == 0 ){ // 1ere ligne
           $fk_commandedet_list = array();
+          $fk_product_list = array();
 
           foreach ($object->lines as $line) {
             $fk_commandedet_list[]=$line->id;
+            $fk_product_list[]=$line->fk_product;
           }
+
+          $product_to_check=array();
+
+          $sql = "SELECT rowid, fk_product_emballage_consigne, fk_product";
+          $sql .= " FROM ".MAIN_DB_PREFIX."consigne_consigneproduct";
+          $sql .= " WHERE fk_product IN (" . implode(',',$fk_product_list) . ")";
+          $sql .= " AND fk_product_emballage_consigne != -1 ";
+
+          dol_syslog("consigne/class/actions_consigne.class.php::printObjectLine", LOG_DEBUG);
+          $resql = $db->query($sql);
+          if ($resql) {
+            $num = $db->num_rows($resql);
+            $i = 0;
+
+            while ($i < $num) {
+              $i++;
+              $obj = $db->fetch_object($resql);
+              if( empty($obj->fk_product_emballage_consigne) || $obj->fk_product_emballage_consigne == -1) continue;
+              $product_to_check[]=$obj->fk_product;
+            }
+
+          }
+          $db->free();
+
+          $ligne_to_check=array();
+          foreach ($object->lines as $line) {
+            if( in_array($line->fk_product,$product_to_check)) $ligne_to_check[]=$line->id;
+          }
+
 
           $liens=array();
 
@@ -156,7 +187,7 @@ class ActionsConsigne
             $num = $db->num_rows($resql);
             $i = 0;
             print '<script>
-            let liens={';
+            let cs_liens={';
 
             while ($i < $num) {
               $obj = $db->fetch_object($resql);
@@ -166,8 +197,18 @@ class ActionsConsigne
               $i++;
             }
             print '};
+            let ligneToCheck=['.implode(',',$ligne_to_check).'];
+            ';
 
-              jQuery(document).ready(function() {
+
+            print 'jQuery(document).ready(function() {
+                for(let i=0;i<ligneToCheck.length;i++){
+                  i=cs_getIndex_commandedet(ligneToCheck[i]);
+                  fk_liens=cs_liens[ligneToCheck[i]];
+                  i_lie=cs_getIndex_commandedet(fk_liens);
+
+                  cs_verifLiens(i,i_lie);
+                }
                 $(\'.qtyl\').change(function(){
                   console.log(\'onchange\');
                   name=$(this).attr(\'name\');
@@ -176,7 +217,7 @@ class ActionsConsigne
 
                   fk_commandedet=$(this).closest(\'table\').find(\'input[name=idl\'+i+\']\').attr(\'value\');
 
-                  fk_liens=liens[fk_commandedet];
+                  fk_liens=cs_liens[fk_commandedet];
                   i_lie=cs_getIndex_commandedet(fk_liens);
 
                   cs_verifLiens(i,i_lie);
@@ -184,6 +225,7 @@ class ActionsConsigne
               });
             </script>';
           }
+          $db->free();
 
 
         }
