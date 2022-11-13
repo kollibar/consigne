@@ -122,7 +122,7 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 	dol_syslog("Trigger '".$this->name."' for action '$action' launched by ".__FILE__.". id=".$object->id);
 
         switch ($action) {
-
+/*
             // Users
 		    case 'USER_CREATE':
 		    case 'USER_MODIFY':
@@ -158,7 +158,7 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 		    case 'CONTACT_DELETE':
 		    case 'CONTACT_ENABLEDISABLE':
 
-			break;
+			break;*/
 		        // Products
 		    case 'PRODUCT_CREATE':
 					$product=new Product($db);
@@ -200,7 +200,7 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 					$consigneProduct->fetch($object->id);
 					$consigneProduct->delete($user); // puis suppression
 					return 1;
-
+/*
 		    case 'PRODUCT_PRICE_MODIFY':
 		    case 'PRODUCT_SET_MULTILANGS':
 		    case 'PRODUCT_DEL_MULTILANGS':
@@ -216,7 +216,7 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 		        // Customer orders
 		    case 'ORDER_CREATE':
 		    case 'ORDER_CLONE':
-			break;
+			break;*/
 		    case 'ORDER_VALIDATE':
 			// a la validation de la commande, ajoute les consignes
 			break;
@@ -330,107 +330,108 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 					return 0;
 				case 'LINEORDER_MODIFY':
 		    case 'LINEORDER_UPDATE':
-			$error=0;
-			$extralabelsCmdeLigne=$extrafields->fetch_name_optionals_label($object->table_element);
+					$error=0;
+					$extralabelsCmdeLigne=$extrafields->fetch_name_optionals_label($object->table_element);
 
-			$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
+					$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
 
-			$cmde=new Commande($db);
-			$extralabelsCmde=$extrafields->fetch_name_optionals_label($cmde->table_element);
+					$cmde=new Commande($db);
+					$extralabelsCmde=$extrafields->fetch_name_optionals_label($cmde->table_element);
 
-			$sql="SELECT * FROM ". MAIN_DB_PREFIX.$object->table_element."_extrafields as t WHERE fk_ligneLiee = ".$object->rowid;
-			dol_syslog(__FILE__."::".$this->name, LOG_DEBUG);
-			$resql = $db->query($sql);
-			$nb = $db->num_rows($resql);
+					$sql="SELECT * FROM ". MAIN_DB_PREFIX.$object->table_element."_extrafields as t WHERE fk_ligneLiee = ".$object->rowid;
+					dol_syslog(__FILE__."::".$this->name, LOG_DEBUG);
+					$resql = $db->query($sql);
+					$nb = $db->num_rows($resql);
 
-			if ($nb != 0){ // il existe un (des) liens
-				$cmdeLigneLiee=new OrderLine($db);
-				$i=0;
-				$nbAction=0;
-				while( $i < $nb){
-					$i++;
-					$obj=$db->fetch_object($resql);
+					if ($nb != 0){ // il existe un (des) liens
+						$cmdeLigneLiee=new OrderLine($db);
+						$i=0;
+						$nbAction=0;
+						while( $i < $nb){
+							$i++;
+							$obj=$db->fetch_object($resql);
 
-					if (empty($obj)) {		// Should not happen
-						return -1;
+							if (empty($obj)) {		// Should not happen
+								return -1;
+							}
+
+
+							$cmdeLigneLiee->fetch($obj->fk_object);
+							$cmdeLigneLiee->fetch_optionals($obj->fk_object,$extralabelsCmdeLigne);
+
+							// actualisation du lien
+							$object->array_options['fk_ligneLiee']=$cmdeLigneLiee->rowid;
+							$object->insertExtraFields();
+
+							if( $object->qty == $cmdeLigneLiee->qty) continue; // pas de changement de quantité=>rien à faire
+
+							$multi=$object->qty / $cmdeLigneLiee->qty;
+							$cmdeLigneLiee->qty=$object->qty;
+
+
+							$cmdeLigneLiee->total_ht = price2num($cmdeLigneLiee->subprice * $object->qty,'MT');
+							$cmdeLigneLiee->total_tva = price2num($cmdeLigneLiee->total_ht * $cmdeLigneLiee->tva_tx / 100,'MT');
+							$cmdeLigneLiee->total_ttc = price2num($cmdeLigneLiee->total_ht + $cmdeLigneLiee->total_tva,'MT');
+
+							$cmdeLigneLiee->multicurrency_total_ttc=price2num($cmdeLigneLiee->multicurrency_total_ttc * $multi,'MT');
+							$cmdeLigneLiee->multicurrency_total_ht=price2num($cmdeLigneLiee->multicurrency_total_ht * $multi,'MT');
+							$cmdeLigneLiee->multicurrency_total_tva=price2num($cmdeLigneLiee->multicurrency_total_tva * $multi,'MT');
+							$cmdeLigneLiee->multicurrency_subprice=price2num($cmdeLigneLiee->multicurrency_subprice * $multi,'MU');
+
+							$result = $cmdeLigneLiee->update($user,1); // actualisation de la ligne consigne, SANS TRIGGER !!!
+
+							If( $result >0 ) $nbAction++;
+							else $error++;
+
+
+							$cmde->fetch($cmdeLigneLiee->fk_commande);
+							$cmde->fetch_optionals($cmdeLigneLiee->fk_commande,$extralabelsCmde);
+
+						}
+						if( $error !=0 ) return -$error;
+						else return $nbAction;
 					}
 
+					return 0;
+				    case 'LINEORDER_DELETE':
+					$error=0;
+					$extralabelsCmdeLigne=$extrafields->fetch_name_optionals_label($object->table_element);
 
-					$cmdeLigneLiee->fetch($obj->fk_object);
-					$cmdeLigneLiee->fetch_optionals($obj->fk_object,$extralabelsCmdeLigne);
+					$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
 
-					// actualisation du lien
-					$object->array_options['fk_ligneLiee']=$cmdeLigneLiee->rowid;
-					$object->insertExtraFields();
+					$cmde=new Commande($db);
+					$extralabelsCmde=$extrafields->fetch_name_optionals_label($cmde->table_element);
 
-					if( $object->qty == $cmdeLigneLiee->qty) continue; // pas de changement de quantité=>rien à faire
+					$sql="SELECT * FROM ". MAIN_DB_PREFIX.$object->table_element."_extrafields as t WHERE fk_ligneLiee = ".$object->rowid;
+					$resql = $db->query($sql);
+					$nb = $db->num_rows($resql);
 
-					$multi=$object->qty / $cmdeLigneLiee->qty;
-					$cmdeLigneLiee->qty=$object->qty;
+					if ($nb != 0){ // il existe un (des) liens
+						$cmdeLigneLiee=new OrderLine($db);
+						$i=0;
+						$nbAction=0;
+						while( $i < $nb){
+							$i++;
+							$obj=$db->fetch_object($resql);
 
+							if (empty($obj)) {		// Should not happen
+								return -1;
+							}
 
-					$cmdeLigneLiee->total_ht = price2num($cmdeLigneLiee->subprice * $object->qty,'MT');
-					$cmdeLigneLiee->total_tva = price2num($cmdeLigneLiee->total_ht * $cmdeLigneLiee->tva_tx / 100,'MT');
-					$cmdeLigneLiee->total_ttc = price2num($cmdeLigneLiee->total_ht + $cmdeLigneLiee->total_tva,'MT');
+							$cmdeLigneLiee->fetch($obj->fk_object);
+							$cmdeLigneLiee->fetch_optionals($obj->fk_object,$extralabelsCmdeLigne);
 
-					$cmdeLigneLiee->multicurrency_total_ttc=price2num($cmdeLigneLiee->multicurrency_total_ttc * $multi,'MT');
-					$cmdeLigneLiee->multicurrency_total_ht=price2num($cmdeLigneLiee->multicurrency_total_ht * $multi,'MT');
-					$cmdeLigneLiee->multicurrency_total_tva=price2num($cmdeLigneLiee->multicurrency_total_tva * $multi,'MT');
-					$cmdeLigneLiee->multicurrency_subprice=price2num($cmdeLigneLiee->multicurrency_subprice * $multi,'MU');
+							$result=$cmdeLigneLiee->delete($user,1);
 
-					$result = $cmdeLigneLiee->update($user,1); // actualisation de la ligne consigne, SANS TRIGGER !!!
+							if( $result>0) $nbAction++;
+							else if( $result < 0 ) $error++;
 
-					If( $result >0 ) $nbAction++;
-					else $error++;
-
-
-					$cmde->fetch($cmdeLigneLiee->fk_commande);
-					$cmde->fetch_optionals($cmdeLigneLiee->fk_commande,$extralabelsCmde);
-
-				}
-				if( $error !=0 ) return -$error;
-				else return $nbAction;
-			}
-
-			return 0;
-		    case 'LINEORDER_DELETE':
-			$error=0;
-			$extralabelsCmdeLigne=$extrafields->fetch_name_optionals_label($object->table_element);
-
-			$object->fetch_optionals($object->rowid,$extralabelsCmdeLigne);
-
-			$cmde=new Commande($db);
-			$extralabelsCmde=$extrafields->fetch_name_optionals_label($cmde->table_element);
-
-			$sql="SELECT * FROM ". MAIN_DB_PREFIX.$object->table_element."_extrafields as t WHERE fk_ligneLiee = ".$object->rowid;
-			$resql = $db->query($sql);
-			$nb = $db->num_rows($resql);
-
-			if ($nb != 0){ // il existe un (des) liens
-				$cmdeLigneLiee=new OrderLine($db);
-				$i=0;
-				$nbAction=0;
-				while( $i < $nb){
-					$i++;
-					$obj=$db->fetch_object($resql);
-
-					if (empty($obj)) {		// Should not happen
-						return -1;
+						}
+						if( $error !=0) return $error;
+						else return $nbAction;
 					}
-
-					$cmdeLigneLiee->fetch($obj->fk_object);
-					$cmdeLigneLiee->fetch_optionals($obj->fk_object,$extralabelsCmdeLigne);
-
-					$result=$cmdeLigneLiee->delete($user,1);
-
-					if( $result>0) $nbAction++;
-					else if( $result < 0 ) $error++;
-
-				}
-				if( $error !=0) return $error;
-				else return $nbAction;
-			}
-			return 0;
+					return 0;
+					/*
 		    case 'ORDER_SUPPLIER_CREATE':
 		    case 'ORDER_SUPPLIER_CLONE':
 		    case 'ORDER_SUPPLIER_VALIDATE':
@@ -572,7 +573,7 @@ class InterfaceConsigneTriggers extends DolibarrTriggers
 		    case 'SHIPPING_REOPEN':
 		    case 'SHIPPING_DELETE':
 		        break;
-
+*/
 		    }
 
 		return 0;
