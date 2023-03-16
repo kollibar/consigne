@@ -68,6 +68,9 @@ document.getElementById("est_emballage_consigne").checked = true*/
 	}
 }
 function onLoad(){
+	onChange("est_emballage_consigne");
+	onChange("est_emballage_consigne_vendu");
+/*
 	if( document.getElementById("est_emballage_consigne").checked == true ){// on le coche
 		document.getElementById("est_emballage_consigne_vendu").checked = false;
 		document.getElementById("fk_product_emballage_consigne_tr").style.display="none";
@@ -81,45 +84,28 @@ function onLoad(){
 		document.getElementById("fk_product_emballage_consigne_tr").style.display="";
 		document.getElementById("fk_product_emballage_retour_tr").style.display="none";
 		document.getElementById("fk_product_emballage_vendu_tr").style.display="none";
-	}
+	}*/
 }
 document.body.onload="onLoad();";
 </script>
 <?php
-/*
-	'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'visible'=>-1, 'enabled'=>1, 'position'=>1, 'notnull'=>1, 'index'=>1, 'comment'=>"Id",),
-	'entity' => array('type'=>'integer', 'label'=>'Entity', 'visible'=>-1, 'enabled'=>1, 'position'=>20, 'notnull'=>1, 'index'=>1,),
-	'description' => array('type'=>'text', 'label'=>'Descrption', 'visible'=>-1, 'enabled'=>1, 'position'=>60, 'notnull'=>-1,),
-	'date_creation' => array('type'=>'datetime', 'label'=>'DateCreation', 'visible'=>-2, 'enabled'=>1, 'position'=>500, 'notnull'=>1,),
-	'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'visible'=>-2, 'enabled'=>1, 'position'=>501, 'notnull'=>1,),
-	'fk_user_creat' => array('type'=>'integer', 'label'=>'UserAuthor', 'visible'=>-2, 'enabled'=>1, 'position'=>510, 'notnull'=>1,),
-	'fk_user_modif' => array('type'=>'integer', 'label'=>'UserModif', 'visible'=>-2, 'enabled'=>1, 'position'=>511, 'notnull'=>-1,),
-	'status' => array('type'=>'integer', 'label'=>'Status', 'visible'=>1, 'enabled'=>1, 'position'=>1000, 'notnull'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Draft', '1'=>'Active', '-1'=>'Cancel')),
-	'fk_product' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'Product', 'visible'=>-1, 'enabled'=>1, 'position'=>2, 'notnull'=>1, 'index'=>1, 'comment'=>"id produit associé",),
-	'est_emballage_consigne' => array('type'=>'integer', 'label'=>'EstEmballageConsigne', 'visible'=>1, 'enabled'=>1, 'position'=>10, 'notnull'=>1, 'comment'=>"0: non, 1: oui",),
-	'suivi_emballage' => array('type'=>'integer', 'label'=>'SuiviEmballahe', 'visible'=>1, 'enabled'=>1, 'position'=>15, 'notnull'=>1, 'comment'=>"0: non, 1: oui         indique si l'emballage doit être suivi par client",),
-	'fk_product_emballage_vendu' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'EmballageVendu', 'visible'=>1, 'enabled'=>1, 'position'=>20, 'notnull'=>-1, 'comment'=>"si le produit vendu doit être différent du produit consigné (pour compta)",),
-	'fk_product_emballage_retour' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'EmballageRetour', 'visible'=>1, 'enabled'=>1, 'position'=>25, 'notnull'=>-1, 'comment'=>"si le produit en retour doit être différent du produit consigné (pour compta)",),
-	'fk_product_emballage_consigne' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'ProduitEmballageConsigne', 'visible'=>1, 'enabled'=>1, 'position'=>40, 'notnull'=>-1, 'comment'=>"si est le produit vendu d'un emballage consigné non retourné sinon null",),
-	'est_emballage_consigne_vendu' => array('type'=>'integer', 'label'=>'EstEmballageConsigneVendu', 'visible'=>1, 'enabled'=>1, 'position'=>45, 'notnull'=>1, 'comment'=>"0: non, 1: oui indique si ce produit correspond à un emballage consigne vendu",),
-	*/
 
-	
 	// description
 
 $object->fields = dol_sort_array($object->fields, 'position');
 
 foreach($object->fields as $key => $val)
 {
+
 	// Discard if extrafield is a hidden field on form
 	if (abs($val['visible']) != 1) continue;
 
 	if (array_key_exists('enabled', $val) && isset($val['enabled']) && ! $val['enabled']) continue;	// We don't want this field
-	
+
 	if( $key == "fk_product") continue; // on n'affiche pas le champ fk_product, celui-ci est géré automatiquement
-	
+
 	if( $key == "status" ) continue; // champ pas encore utilisé !
-	
+
 	$moreparam='onchange="onChange(this.id);"';
 
 	print '<tr id='.$key.'_tr><td';
@@ -133,6 +119,7 @@ foreach($object->fields as $key => $val)
 	elseif ($val['type'] == 'text' || $val['type'] == 'html') $value = GETPOSTISSET($key)?GETPOST($key,'none'):$object->$key;
 	else $value = GETPOSTISSET($key)?GETPOST($key, 'alpha'):$object->$key;
 	//var_dump($val.' '.$key.' '.$value);
+
 	print $object->showInputField($val, $key, $value, $moreparam, '', '', 0);
 	print '</td>';
 	print '</tr>';

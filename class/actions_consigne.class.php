@@ -99,6 +99,16 @@ class ActionsConsigne
 		}
 	}
 
+  function createFrom(&$parameters, &$object, &$action){
+    global $langs,$conf;
+		global $hookmanager;
+    global $db;
+
+    if( $object->element == 'commande' && isset($object->context['createfromclone']) &&  $commande->context['createfromclone'] == 'createfromclone'){
+      // commande create from clone
+      $objFrom=$parameters['objFrom'];
+    }
+  }
 
 
 
@@ -202,9 +212,9 @@ class ActionsConsigne
 
 
             print 'jQuery(document).ready(function() {
-                for(let i=0;i<ligneToCheck.length;i++){
-                  i=cs_getIndex_commandedet(ligneToCheck[i]);
-                  fk_liens=cs_liens[ligneToCheck[i]];
+                for(let j=0;j<ligneToCheck.length;j++){
+                  i=cs_getIndex_commandedet(ligneToCheck[j]);
+                  fk_liens=cs_liens[ligneToCheck[j]];
                   i_lie=cs_getIndex_commandedet(fk_liens);
 
                   cs_verifLiens(i,i_lie);
@@ -248,7 +258,7 @@ class ActionsConsigne
       if( ! array_key_exists( 'editColspan', $parameters)){ // cas 1 création de l'éxpédition
 
         // masquage des cache sur les BL
-        if( $consigneProduct->est_cache_bordereau_livraison ){
+        if( $consigneProduct->est_cache_bordereau_livraison && 1 == 0 ){
           print '<script>jQuery(document).ready(function() {
             $(\'a[name='.$parameters['line']->id.']\').closest(\'td\').closest(\'tr\').attr(\'style\',\'display:none;\');
           });

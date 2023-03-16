@@ -74,7 +74,11 @@ function cs_getSubIndex(name){
   }
 }
 function cs_getIndex_commandedet(fk_commandedet){
-  return $('a[name='+fk_commandedet+']').closest('tr').find('input')[0].attributes[0].value.slice(8);
+
+  if( $('a[name='+fk_commandedet+']').length == 0 ) r= -1;
+  else r=$('a[name='+fk_commandedet+']').closest('tr').find('input')[0].attributes[0].value.slice(8);
+  console.log('cs_getIndex_commandedet('+fk_commandedet+')='+r);
+  return r;
 }
 function cs_getListeInputName_Index(index){
   let listeName=[];
@@ -124,8 +128,9 @@ function cs_getMaxQty(index, subindex){
   return -1;
 }
 function cs_setQty(index, subindex, value){
+  console.log('cs_setQty('+index+','+subindex+','+value+')');
+  if( subindex == 0 && $('#qtyl'+index+'_'+subindex).length == 0 ){
     return $('#qtyl'+index).val(value);
-    if( subindex == 0 && $('#qtyl'+index+'_'+subindex).length == 0 ){
   } else {
     return $('#qtyl'+index+'_'+subindex).val(value);
   }
@@ -149,10 +154,11 @@ function cs_getNbInput(index){
   return l.length;
 }
 function cs_verifLiens(i,i_lie){
+  console.log('cs_verifLiens('+i+','+i_lie+')');
   var qty=cs_getQty_Index(i);
   var qty_lie=cs_getQty_Index(i_lie);
 
-  console.log('qty:' + qty + ' qty_lie:' + qty_lie);
+  console.log('qty ('+i+'):' + qty + ' qty_lie ('+i_lie+'):' + qty_lie);
 
 
   var nb_lie=cs_getNbInput(i_lie);

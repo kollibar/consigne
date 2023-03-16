@@ -199,11 +199,11 @@ class consignewidget1 extends ModeleBoxes
 	 * @param array $head Array with properties of box title
 	 * @param array $contents Array with properties of box lines
 	 * @return void
-	 */
+	 *//*
 	public function showBox($head = null, $contents = null)
 	{
 		// You may make your own code here…
 		// … or use the parent's class function using the provided head and contents templates
 		parent::showBox($this->info_box_head, $this->info_box_contents);
-	}
+	}*/
 }

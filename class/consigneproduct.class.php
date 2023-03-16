@@ -32,6 +32,11 @@ require_once DOL_DOCUMENT_ROOT . '/core/class/commonobject.class.php';
  */
 class ConsigneProduct extends CommonObject
 {
+
+	
+	const AJOUT_A_LA_FACTURE = 1;
+	const AJOUT_A_LA_COMMANDE_PROPAL = 0;
+
 	/**
 	 * @var string ID to identify managed object
 	 */
@@ -76,6 +81,7 @@ class ConsigneProduct extends CommonObject
 	 * @var array  Array with all fields and their property. Do not use it as a static var. It may be modified by constructor.
 	 */
 	public $fields=array(
+		// tous les produits
 		'rowid' => array('type'=>'integer', 'label'=>'TechnicalID', 'visible'=>-1, 'enabled'=>1, 'position'=>1, 'notnull'=>1, 'index'=>1, 'comment'=>"Id",),
 		'entity' => array('type'=>'integer', 'label'=>'Entity', 'visible'=>-1, 'enabled'=>1, 'position'=>20, 'notnull'=>1, 'index'=>1,),
 		'description' => array('type'=>'text', 'label'=>'Descrption', 'visible'=>-1, 'enabled'=>1, 'position'=>60, 'notnull'=>-1,),
@@ -83,15 +89,37 @@ class ConsigneProduct extends CommonObject
 		'tms' => array('type'=>'timestamp', 'label'=>'DateModification', 'visible'=>-2, 'enabled'=>1, 'position'=>501, 'notnull'=>1,),
 		'fk_user_creat' => array('type'=>'integer', 'label'=>'UserAuthor', 'visible'=>-2, 'enabled'=>1, 'position'=>510, 'notnull'=>1,),
 		'fk_user_modif' => array('type'=>'integer', 'label'=>'UserModif', 'visible'=>-2, 'enabled'=>1, 'position'=>511, 'notnull'=>-1,),
-		'status' => array('type'=>'integer', 'label'=>'Status', 'visible'=>1, 'enabled'=>1, 'position'=>1000, 'notnull'=>1, 'index'=>1, 'arrayofkeyval'=>array('0'=>'Draft', '1'=>'Active', '-1'=>'Cancel')),
-		'fk_product' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'Product', 'visible'=>-1, 'enabled'=>1, 'position'=>2, 'notnull'=>1, 'index'=>1, 'comment'=>"id produit associé",),
-		'est_emballage_consigne' => array('type'=>'boolean', 'label'=>'EstEmballageConsigne', 'visible'=>1, 'enabled'=>1, 'position'=>10, 'notnull'=>1, 'comment'=>"0: non, 1: oui",),
-		'suivi_emballage' => array('type'=>'boolean', 'label'=>'SuiviEmballage', 'visible'=>1, 'enabled'=>1, 'position'=>15, 'notnull'=>1, 'comment'=>"0: non, 1: oui         indique si l'emballage doit être suivi par client",),
-		'fk_product_emballage_vendu' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'EmballageVendu', 'visible'=>1, 'enabled'=>1, 'position'=>20, 'notnull'=>-1, 'comment'=>"si le produit vendu doit être différent du produit consigné (pour compta)",),
-		'fk_product_emballage_retour' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'EmballageRetour', 'visible'=>1, 'enabled'=>1, 'position'=>25, 'notnull'=>-1, 'comment'=>"si le produit en retour doit être différent du produit consigné (pour compta)",),
-		'fk_product_emballage_consigne' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'ProduitEmballageConsigne', 'visible'=>1, 'enabled'=>1, 'position'=>40, 'notnull'=>-1, 'comment'=>"si est le produit vendu d'un emballage consigné non retourné sinon null",),
-		'est_emballage_consigne_vendu' => array('type'=>'boolean', 'label'=>'EstEmballageConsigneVendu', 'visible'=>1, 'enabled'=>1, 'position'=>45, 'notnull'=>1, 'comment'=>"0: non, 1: oui indique si ce produit correspond à un emballage consigne vendu",),
-		'est_cache_bordereau_livraison' => array('type'=>'boolean', 'label'=>'EstCacheBordereauLivraison', 'visible'=>1, 'enabled'=>1, 'position'=>50, 'notnull'=>1, 'comment'=>"0: non, 1: oui indique si ce produit est masqué sur les bordereau de livraison",),
+		'status' => array('type'=>'integer', 'label'=>'Status', 'visible'=>1, 'enabled'=>1, 'position'=>1000, 'notnull'=>1, 'index'=>1,
+					'arrayofkeyval'=>array('0'=>'Draft', '1'=>'Active', '-1'=>'Cancel')),
+		'fk_product' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'Product', 'visible'=>-1, 'enabled'=>1, 'position'=>2, 'notnull'=>1, 'index'=>1, 
+					'comment'=>"id produit associé",),
+		'est_emballage_consigne' => array('type'=>'boolean', 'label'=>'EstEmballageConsigne', 'visible'=>1, 'enabled'=>1, 'position'=>10, 'notnull'=>1, 
+					'default'=> false ,'comment'=>"0: non, 1: oui",),
+		'est_emballage_consigne_vendu' => array('type'=>'boolean', 'label'=>'EstEmballageConsigneVendu', 'visible'=>1, 'enabled'=>1, 'position'=>45, 'notnull'=>1,
+					'default' => false, 'comment'=>"0: non, 1: oui indique si ce produit correspond à un emballage consigne vendu",),
+
+		// produit ni emballage_consigne ni emballage_consigne_vendu
+		'fk_product_emballage_consigne' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'ProduitEmballageConsigne', 'visible'=>1, 'enabled'=>1, 'position'=>40, 
+					'notnull'=>-1, 'default' => null, 'comment'=>"si est le produit vendu d'un emballage consigné non retourné sinon null",),
+
+		// produits emballage_consigne
+		'fk_product_emballage_vendu' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'EmballageVendu', 'visible'=>1, 'enabled'=>'($object->est_emballage_consigne)', 
+					'position'=>20, 'notnull'=>-1, 'default' => null, 'comment'=>"si le produit vendu doit être différent du produit consigné (pour compta)",),
+		'fk_product_emballage_retour' => array('type'=>'integer:Product:product/class/product.class.php', 'label'=>'EmballageRetour', 'visible'=>1, 'enabled'=>'($object->est_emballage_consigne)',
+					'position'=>25, 'notnull'=>-1, 'default' => null, 'comment'=>"si le produit en retour doit être différent du produit consigné (pour compta)",),
+		'suivi_emballage' => array('type'=>'boolean', 'label'=>'SuiviEmballage', 'visible'=>1, 'enabled'=>'($object->est_emballage_consigne)', 'position'=>15, 'notnull'=>-1, 
+					'comment'=>"0: non, 1: oui         indique si l'emballage doit être suivi par client",),
+		'ajout_a' => array('type'=>'integer', 'label'=>'AjoutA', 'enabled'=>'($object->est_emballage_consigne)', 'visible'=>1, 'position'=>50, 'notnull'=>-1,'default'=>'0',
+					'arrayofkeyval'=>array('0'=>'LaCommandePropal','1'=>'LaFacture')),
+		'indissociable' => array('type'=>'boolean', 'label'=>'IndissociableDeSonProduit', 'visible'=>1, 'enabled'=>'($object->est_emballage_consigne)', 'position'=>51, 'notnull'=>-1, 
+					'default' => false, 'comment'=>"0: non, 1: oui indique si ce produit (consigne) est indissociable du produit auquel il est lié (quatité maintenue identique)",),
+		'prix_produit_inclu_consigne' => array('type'=>'boolean', 'label'=>'prixProduitIncluConsigne', 'visible'=>1, 'enabled'=>'($object->est_emballage_consigne && $object->ajout_a == 1)', 
+					'position'=>53, 'notnull'=>-1, 'default' => false,'comment'=>"0: non, 1: oui indique si ce produit (consigne) est indissociable du produit auquel il est lié (quatité maintenue identique)",),
+
+		'est_cache_bordereau_livraison' => array('type'=>'boolean', 'label'=>'EstCacheBordereauLivraison', 'visible'=>1, 'enabled'=>'($object->est_emballage_consigne && $object->ajout_a == 1)',
+					'position'=>52, 'notnull'=>-1, 'default' => false, 'comment'=>"0: non, 1: oui indique si ce produit est masqué sur les bordereau de livraison",),
+
+		// a supprimer prochainement
 		'colisage' => array('type'=>'integer', 'label'=>'ColisagePar', 'visible'=>1, 'enabled'=>1, 'position'=>55, 'notnull'=>-1,),
 	);
 	public $rowid;
@@ -109,11 +137,23 @@ class ConsigneProduct extends CommonObject
 	public $fk_product_emballage_retour;
 	public $fk_product_emballage_consigne;
 	public $est_emballage_consigne_vendu;
-	public $est_cache_bordereau_livraison;
 	public $colisage;
+
+	public $est_cache_bordereau_livraison;
+	public $ajout_a;
+	public $indissociable;
+	public $prix_produit_inclu_consigne;
 	// END MODULEBUILDER PROPERTIES
 
-
+	/* mode d'ajout consigne :
+	*
+	*	* ajout à la commande/propal
+	*			-> masqué (ou non) sur les bl
+	*			-> indissociable (ou non)
+	*	* ajout à la facturation
+	*			-> indissociable
+	*			-> prix produit inclue la consigne (ou non)
+	*/
 
 	// If this object has a subtable with lines
 
@@ -148,19 +188,29 @@ class ConsigneProduct extends CommonObject
 	public function __construct(DoliDB $db)
 	{
 		global $conf;
+		global $langs;
 
 		$this->db = $db;
 
 		if (empty($conf->global->MAIN_SHOW_TECHNICAL_ID)) $this->fields['rowid']['visible']=0;
 		if (empty($conf->multicompany->enabled)) $this->fields['entity']['enabled']=0;
+
+		// traduit tous les champs à choix multiple de fields
+		foreach ($this->fields as $key => $value) {
+			if (!empty($this->fields[$key]['arrayofkeyval']) && is_array($this->fields[$key]['arrayofkeyval'])) {
+				foreach ($this->fields[$key]['arrayofkeyval'] as $k => $v) {
+					$this->fields[$key]['arrayofkeyval'][$k]=$langs->trans($v);
+				}
+			}
+		}
 	}
-	
-	
+
+
 	/**
 	 * Initialise un objet consigneproduct par defaut
 	 *
 	 */
-	
+
 	public function init()
 	{
 		$this->now=dol_now();
@@ -282,35 +332,35 @@ class ConsigneProduct extends CommonObject
 	public function update(User $user, $notrigger = false)
 	{
 		$error = 0;
-			
+
 		if (isset($this->description)) $this->ref=trim($this->description);
-		
+
 		$sql = "UPDATE ".MAIN_DB_PREFIX.$this->table_element;
 		$sql.= " SET description = '" . $this->db->escape($this->description) ."'";
 		$sql.= ", tms = '".$this->db->idate(dol_now()) ."'";
-		
+
 		$sql.= ", est_cache_bordereau_livraison = '" . (! $this->est_cache_bordereau_livraison ? 0: 1) ."'";
 		$sql.= ", colisage = ".$this->colisage;
-		
+
 		$sql.= ", est_emballage_consigne = '" . (! $this->est_emballage_consigne ? 0: 1) ."'";
 		$sql.= ", est_emballage_consigne_vendu = '" . (! $this->est_emballage_consigne_vendu ? 0: 1) ."'";
 		$sql.= ", suivi_emballage = '" . (! $this->suivi_emballage ? 0: 1) ."'";
-		
+
 		$sql.= ", fk_product_emballage_vendu = '" . ( ! $this->fk_product_emballage_vendu ? "-1" : $this->fk_product_emballage_vendu )."'";
 		$sql.= ", fk_product_emballage_retour = '" . ( ! $this->fk_product_emballage_retour ? "-1" : $this->fk_product_emballage_retour ) ."'";
 		$sql.= ", fk_product_emballage_consigne = '" . ( ! $this->fk_product_emballage_consigne ? "-1" : $this->fk_product_emballage_consigne ) ."'";
-		
+
 		$sql.= ", status = '" . $this->db->escape($this->status) ."'";
 		$sql.= ", entity = '" . $this->db->escape($this->entity) ."'";
 		$sql.= ", fk_user_modif = ".($user->id > 0 ? $user->id : 'NULL');
 		$sql.= ", fk_product = ".$this->fk_product;
-		
 
-		
+
+
 		$sql.= " WHERE rowid = " . $this->id;
 
 		dol_syslog(get_class($this)."::update", LOG_DEBUG);
-		
+
 
 		$this->db->begin();
 		if (! $error)
@@ -573,12 +623,12 @@ class ConsigneProduct extends CommonObject
 
 		return 0;
 	}
-	
+
 	public function check(){
-		
+
 		if( $this->est_emballage_consigne =="1") { // est un emballage consigne
 			//$this->est_emballage_consigne =1;
-			
+
 			// donc ne peut pas avoir de consigne
 			$this->fk_product_emballage_consigne = null;
 			// et ne peut pas être un emballage vendu
@@ -588,10 +638,10 @@ class ConsigneProduct extends CommonObject
 			$this->fk_product_emballage_consigne_vendu=null;
 			$this->fk_product_emballage_consigne_retour=null;
 		}
-		
+
 		if( $this->est_emballage_consigne_vendu  =="1") { // est un emballage consigne vendu
 			//$this->est_emballage_consigne_vendu =1;
-			
+
 			// donc ne peut pas avoir de consigne
 			$this->fk_product_emballage_consigne = null;
 			// ni d'emballage consigne vendu
@@ -599,7 +649,7 @@ class ConsigneProduct extends CommonObject
 			// ni d'emballage de retour de consigne
 			$this->fk_product_emballage_retour = null;
 		}
-		
+
 		return true;
 	}
 }

@@ -95,7 +95,7 @@ class modConsigne extends DolibarrModules
 									'models' => 0,                                   	// Set this to 1 if module has its own models directory (core/modules/xxx)
 									'css' => array('/consigne/css/consigne.css.php'),	// Set this to relative path of css file if module has its own css file
 	 								'js' => array('/consigne/js/consigne.js.php'),          // Set this to relative path of js file if module must load a js on all pages
-									'hooks' => array('expeditioncard'), 	// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context 'all'
+									'hooks' => array('expeditioncard', 'ordercard', 'orderdao'), 	// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context 'all'
 		                        );
 
 		// Data directories to create when module is enabled.
@@ -521,7 +521,6 @@ class modConsigne extends DolibarrModules
 		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
 		$extrafields = new ExtraFields($this->db);
 		$resultAdd1=$extrafields->addExtraField('fk_ligneLiee', "ligne liée (Consigne)", 'select', 1,  3, 'commandedet',   0, 0, 'null', '', 1, '', 0, 1, '', '', 'consigne@consigne', '$conf->consigne->enabled');
-		$resultAdd2=$extrafields->addExtraField('fk_ligneLiee', "ligne liée (Consigne)", 'int', 1,  3, 'expeditiondet',   0, 0, 'null', '', 1, '', 0 /* visible */, 1, '', '', 'consigne@consigne', '$conf->consigne->enabled');
 		$resultAdd3=$extrafields->addExtraField('fk_ligneLiee', "ligne liée (Consigne)", 'int', 1,  3, 'facturedet',   0, 0, 'null', '', 1, '', 0 /* visible */, 1, '', '', 'consigne@consigne', '$conf->consigne->enabled');
 		//$result1=$extrafields->addExtraField('myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', 0, 0, '', '', 'consigne@consigne', '$conf->consigne->enabled');
 		//$result2=$extrafields->addExtraField('myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', 0, 0, '', '', 'consigne@consigne', '$conf->consigne->enabled');

@@ -52,3 +52,14 @@ Consigne = Consigne
 Consignes = Consignes
 
 NbColis = Nb de colis
+
+
+# Onglet consigne product
+AjoutA=Ajout de la consigne à
+LaFacture=la facture
+LaCommandePropal=la commande/propal
+IndissociableDeSonProduit=Indissociable de son produit
+prixProduitIncluConsigne=Prix du produit inclus le prix de la consigne
+ColisagePar=Colisage par
+EstCacheBordereauLivraison=Caché sur les BL
+EstEmballageConsigne=Est un emballage consigné

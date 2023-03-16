@@ -240,6 +240,11 @@ if ($action == 'update' && $usercancreate){
 		$object->est_cache_bordereau_livraison           = GETPOST('est_cache_bordereau_livraison');
 		$object->colisage           = GETPOST('colisage');
 
+		$object->ajout_a = GETPOST('ajout_a');
+		$object->indissociable = GETPOST('indissociable');
+		$object->prix_produit_inclu_consigne = GETPOST('prix_produit_inclu_consigne');
+
+
 		if( $object->fk_product_emballage_vendu == "-1" ) $object->fk_product_emballage_vendu=null;
 		if( $object->fk_product_emballage_retour == "-1" ) $object->fk_product_emballage_retour=null;
 		if( $object->fk_product_emballage_consigne == "-1" ) $object->fk_product_emballage_consigne=null;

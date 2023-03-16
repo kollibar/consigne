@@ -1,0 +1,1 @@
+ALTER TABLE llx_liaisons_lignes ADD INDEX idx_liaisons_lignes(rowid);
